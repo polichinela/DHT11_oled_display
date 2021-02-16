@@ -1,0 +1,84 @@
+/*
+Placa ATMEGA328P StandAlone con sensores DHT11 y Oled 
+Funcionamiento:
+Muestra en la pantalla Oled los valores de Ttura y Humedad cada 2 segundos.
+//
+DHT 11 y oled en un atmega standalone
+// for DHT11, 
+//      VCC: 5V or 3V
+//      GND: GND
+//      DATA: 9 // en este caso el digital 9
+Para OLED
+//      VCC: 5V 
+//      GND: GND
+//      SDA: 4 
+//      SCL: 5
+*/
+
+#include <SimpleDHT.h>
+
+int pinDHT11 = 9;
+SimpleDHT11 dht11;
+
+#include <Arduino.h>
+#include <U8x8lib.h>
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+// U8x8 Contructor List 
+U8X8_SH1106_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE);
+// End of constructor list
+int DEBUG=0;
+
+void setup(void)
+{
+  u8x8.begin();
+  if (DEBUG>0){
+    Serial.begin(9600);
+  }
+}
+
+void loop(void)
+{
+  // iniciamos OLED 
+  u8x8.setFont(u8x8_font_px437wyse700b_2x2_r);
+  //u8x8.drawString(0, 2, "12345678");
+  // start working...
+  if (DEBUG>0){
+    Serial.println("=================================");
+    Serial.println("Sample DHT11...");
+  }
+   u8x8.drawString(0, 0, "Temp/Hum");
+  // read without samples.
+  byte temperature = 0;
+  byte humidity = 0;
+  if (dht11.read(pinDHT11, &temperature, &humidity, NULL)) {
+    if (DEBUG>0){
+      Serial.print("Read DHT11 failed.");
+    }
+    u8x8.drawString(0, 0, "Fallo DHT");
+    return;
+  }
+  if (DEBUG>0){
+    Serial.print("Sample OK: ");
+    Serial.print((int)temperature); Serial.print(" *C, "); 
+  }
+  u8x8.drawString(0, 2, "Tmp:");
+  u8x8.setCursor(7, 2);
+  u8x8.print(temperature);
+  u8x8.setCursor(11, 2);
+  u8x8.print("*C");
+  
+  if (DEBUG>0){
+    Serial.print((int)humidity); Serial.println(" %");
+  }
+  u8x8.drawString(0, 4, "Hum:");
+  u8x8.setCursor(7, 4);
+  u8x8.print(humidity);
+  u8x8.setCursor(11, 4);
+  u8x8.print("%");
+
+  
+  delay(2000);
+}
